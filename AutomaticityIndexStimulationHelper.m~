@@ -1,0 +1,8 @@
+function a = findMatchingSlope(top, bottom, b, x)
+%given the top and bottom of a sigmoid, and desired x value to reach 0.99
+%of plateau, find the corresponding slope, a.
+plateauScale = 0.01;
+top = 1; bottom = 0; plateauShift = (top-bottom) * plateauScale;
+yMax = top - plateauShift;
+a = (b - log(1/yMax -1)) / x;
+end
