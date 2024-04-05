@@ -66,10 +66,12 @@ for vars = [1,4,3]
 %Index, Hbo, DeltaPerf
 %     PlotHelper.barPlotWithIndiv(eval(['allData.' variablesToFill{vars} '(commonSubj,[1,3,5,7])'])',commonSubjId,{'V1','V2','V3','V4'},variablesToFill{vars},'PRIMA Over Session W2 (12wk apart)',true,[variablesToFill{vars} '_W2'])
 %     PlotHelper.barPlotWithIndiv(eval(['allData.' variablesToFill{vars} '(commonSubj,[2,4,6,8])'])',commonSubjId,{'V1','V2','V3','V4'},variablesToFill{vars},'PRIMA Over Session W2Uneven (12wk apart)',true,[variablesToFill{vars} '_W2U'])
+
+    %change from v1 to v2,v3,v4
     PlotHelper.barPlotWithIndiv(eval(['allData.' variablesToFill{vars} '(commonSubj,[3,5,7]) - allData.' variablesToFill{vars} '(commonSubj,1)'])',commonSubjId,{'V2','V3','V4'},['Diff from V1 ' variablesToFill{vars} ],'PRIMA Diff from V1, W2 (12wk apart)',true,[variablesToFill{vars} '_W2_Diff'])
     PlotHelper.barPlotWithIndiv(eval(['allData.' variablesToFill{vars} '(commonSubj,[4,6,8]) - allData.' variablesToFill{vars} '(commonSubj,2)'])',commonSubjId,{'V2','V3','V4'},['Diff from V1 ' variablesToFill{vars} ],'PRIMA Diff from V1, W2Uneven (12wk apart)',true,[variablesToFill{vars} '_W2U_Diff'])
 end
-%change from v1 to v2,v3,v4
+
 
 
 

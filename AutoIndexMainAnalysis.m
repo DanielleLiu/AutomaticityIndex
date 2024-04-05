@@ -8,9 +8,9 @@
 %performance and demographic variables and cognitive variables.
 %% Load perf, pfc data and compute automaticity index.
 close all; clc; clear all;
-studyID = {'Move MYHAT'};%{'Move MYHAT'};%{'NMCM','PRIMA','Move MYHAT'}; %NMCM, PRIMA, MMH
+studyID = {'NMCM','PRIMA','Move MYHAT'};%{'Move MYHAT'};%{'NMCM','PRIMA','Move MYHAT'}; %NMCM, PRIMA, MMH
 scriptDir = fileparts(matlab.desktop.editor.getActiveFilename); 
-scriptDir = strrep(scriptDir,'AutoIndexAnalysis','');
+scriptDir = strrep(scriptDir,'AutomaticityIndex','');
 scriptDir = [scriptDir 'Data' filesep];
 saveDir = [scriptDir 'IndexAppliedResults' filesep '012723Data' filesep];
 scaleMethod = 'Exp';
@@ -427,8 +427,8 @@ lmTable{:,:} = zscor_xnan(lmTable{:,:});
 
 %fixed model or upper model if using stepwise.
 % cogTerms = 'MMSE_total + age + sexF + eduyr + TMTBMinusTMTA'; 
-% cogTerms = 'MMSE_total + age + sexF + eduyr + race';%keep demographic only
-cogTerms = 'trailb + age + sexF + eduyr';
+cogTerms = 'MMSE_total + age + sexF + eduyr + race';%keep demographic only
+% cogTerms = 'trailb + age + sexF + eduyr';
 %terms to choose in stepwise regression
 predictorTerms = split(cogTerms,' + ');
 % cogTerms = 'age + MMSE_total + sexF + eduyr + traila + trailb + TMTBMinusTMTA';
@@ -741,6 +741,19 @@ for taskIdx = 1:2 %W2 then W2u
 %         saveas(f2,[saveDir 'zScore_MdlFitCompn_Robust_' saveSuffix '_' taskName '_diagnostics.png'])
     end
 end
+
+%% print out the model fit results to populate the table in the paper
+%need R2, model p value, standardized beta +- SE, beta pvalue
+clc
+format short %2 decimal place
+mdlIndx = [34,30,27,35,31,29];%adjusted hbo[10,6,3,11,7,5];%unadjusted hbo [34,30,27,35,31,29];%unadjusted Hbr[36,32,27,37,33,29];%adjusted Hbr[12,8,3,13,9,5]
+for mdlI = mdlIndx
+mdl = mdlSummary{mdlI,end};
+mdl.Formula
+mdlInfo = [mdl.Rsquared.Ordinary, coefTest(mdl), mdl.Coefficients{'MMSE_total','Estimate'},...
+    mdl.Coefficients{'MMSE_total','SE'}, mdl.Coefficients{'MMSE_total','pValue'}];
+round(mdlInfo,4)
+end
 %% Exploratory: find unique combinations of age and MMSE and rows with duplicate value (the duplicate will cause model under fit)
 tempData = [lmTable.age, lmTable.MMSE_total];
 [tempDataUnique, Iunique,~] = unique(tempData, 'rows','first');
@@ -795,7 +808,15 @@ hold on; scatter(lmTable.MMSE_total,lmTable.W2HboScaled)
 % PlotHelper.computeAndPlotCorrelations(cogData,[pfcDataAll{4}],subjectID,['Correlation Between Demographic vs ' saveStr{4}],...,
 %     cogLabels, {'W2Hbr','W2UHbr'}, saveResAndFigure, [saveDir 'Corr_Cog_vs_' saveStr{4}],true);
 
-%% MCI Analysis: Compare between subjects without or without CDR for move participants
+%% MCI Analysis: 1. put gait change data in the table
+lmTable.deltaGaitW2 = deltaPerfGaitOrCog(:,1); %deltaPerfGaitOrCog columns: deltaWalk for W2, W2Uneven, then deltaCog for W2, W2Unevent
+lmTable.deltaGaitW2U = deltaPerfGaitOrCog(:,2); %deltaPerfGaitOrCog columns: deltaWalk for W2, W2Uneven, then deltaCog for W2, W2Unevent
+%perfDataArray in order: wk, s2, w2gait, w2alpha, w2ugati, w2ualpha
+lmTable.GaitWk = perfDataArray(:,1); %deltaPerfGaitOrCog columns: deltaWalk for W2, W2Uneven, then deltaCog for W2, W2Unevent
+lmTable.GaitW2 = perfDataArray(:,3); %deltaPerfGaitOrCog columns: deltaWalk for W2, W2Uneven, then deltaCog for W2, W2Unevent
+lmTable.GaitW2U = perfDataArray(:,5); %deltaPerfGaitOrCog columns: deltaWalk for W2, W2Uneven, then deltaCog for W2, W2Unevent
+
+%% MCI Analysis: 2. Compare between subjects without or without CDR for move participants
 if strcmp(studyID, 'Move MYHAT') 
     cdrData = readcell([scriptDir filesep 'EmmaDataset' filesep '01272023Data' filesep 'MYHAT_CDR_matchToHMBLv1' filesep 'MMH_HMBLv1_CDRfromMYHATstudy.csv']);
     cdrDataHeader = cdrData(1,:);
@@ -823,29 +844,42 @@ if strcmp(studyID, 'Move MYHAT')
     
     f = figure('units','normalized','outerposition',[0 0 1 1]);
     hold on;
-    varsToPlot = {'W2HboScaled','W2Hbo','DeltaPerfW2','W2UHboScaled','W2UHbo','DeltaPerfW2U'};
-%     varsToPlot = {'age','sexF','eduyr'}
-    for varIdx = [1]%1:numel(varsToPlot);
-%         subplot(2,3,varIdx); hold on;
+    %option for combined perf
+%     varsToPlot = {'W2HboScaled','W2Hbo','DeltaPerfW2','W2UHboScaled','W2UHbo','DeltaPerfW2U'};
+    %use gait speed normalized change only.
+    varsToPlot = {'W2HboScaled','W2Hbo','GaitWk','W2UHboScaled','W2UHbo','GaitWk'};
+    cohenDs = [];
+    %     varsToPlot = {'age','sexF','eduyr'}
+    for varIdx = 1:numel(varsToPlot)%[1]%1:numel(varsToPlot);
+        subplot(2,3,varIdx); hold on;
         hold on;
         currVar = varsToPlot{varIdx};
-        %TODO: plotCI needs to have an additional argument for what kind of
-        %CI are we plotting (inverse t or bootstrp?)
-%         PlotHelper.plotCI(1,eval(['lmTable.' currVar '((~currMCIMask) & (~pastMCIMask))']),'k','NonMCI',false)
-%         PlotHelper.plotCI(2,eval(['lmTable.' currVar '(pastMCIMask)']),'k','PastMCI',false)
-        PlotHelper.plotCI(3,eval(['lmTable.' currVar '(currMCIMask)']),PlotHelper.colorOrder(1,:),'CurrentMCI',true)
-        PlotHelper.plotCI(4,eval(['lmTable.' currVar '(matchSubjIdx)']),PlotHelper.colorOrder(2,:),'MatchedCtr',true)
-%         xticks([1 2 3 4]); xticklabels({'NonMCI','PastMCI','CurrentMCI','AgeSexMatched NonMCI'});
-        xticks([1 3 4]); xticklabels({'NonMCI','CurrentMCI','AgeSexMatched NonMCI'});
-        title(currVar)
-        dataToConnect = [eval(['lmTable.' currVar '(currMCIMask)']),eval(['lmTable.' currVar '(matchSubjIdx)'])];
-        plot([3.4 4.4],dataToConnect','k','MarkerSize',0.5,'HandleVisibility','off')
+% %         PlotHelper.plotCI(1,eval(['lmTable.' currVar '((~currMCIMask) & (~pastMCIMask))']),'k','NonMCI',false)
+% %         PlotHelper.plotCI(2,eval(['lmTable.' currVar '(pastMCIMask)']),'k','PastMCI',false)
+%         PlotHelper.plotCI(3,eval(['lmTable.' currVar '(currMCIMask)']),PlotHelper.colorOrder(1,:),'CurrentMCI',true)
+%         PlotHelper.plotCI(4,eval(['lmTable.' currVar '(matchSubjIdx)']),PlotHelper.colorOrder(2,:),'MatchedCtr',true)
+% %         xticks([1 2 3 4]); xticklabels({'NonMCI','PastMCI','CurrentMCI','AgeSexMatched NonMCI'});
+%         xticks([1 3 4]); xticklabels({'NonMCI','CurrentMCI','AgeSexMatched NonMCI'});
+%         title(currVar)
+%         dataToConnect = [eval(['lmTable.' currVar '(currMCIMask)']),eval(['lmTable.' currVar '(matchSubjIdx)'])];
+%         plot([3.4 4.4],dataToConnect','k','MarkerSize',0.5,'HandleVisibility','off')
+        
+        %plot in bar graphs, subjectIDs are controlID only (passed as a dummy so that
+        %the helper can make the plot)
+        PlotHelper.barPlotWithIndiv([eval(['lmTable.' currVar '(matchSubjIdx)']),eval(['lmTable.' currVar '(currMCIMask)'])]',...
+        subjectID([matchSubjIdx]),{'Control','MCI'},currVar,currVar,false,[],f)
+        dataDiff = [eval(['lmTable.' currVar '(matchSubjIdx)']),eval(['lmTable.' currVar '(currMCIMask)'])]';
+        dataDiff = dataDiff(2,:) - dataDiff(1,:);
+        cohenDs(varIdx) = nanmean(dataDiff) / nanstd(dataDiff);
     end
     legend();
+    sgtitle('MCI vs Matched Control')
+    set(findall(gcf,'-property','FontSize'),'FontSize',25)
+    cohenDs
     if saveResAndFigure
         set(gcf,'renderer','painters')
-        saveas(f,[saveDir 'MCIvsControlIndexComp' strjoin(studyID) '.fig'])
-        saveas(f,[saveDir 'MCIvsControlIndexComp' strjoin(studyID) '.png'])
+        saveas(f,[saveDir 'MCIvsMatchedControlComp' strjoin(studyID) 'VsSTWk.fig'])
+        saveas(f,[saveDir 'MCIvsMatchedControlComp' strjoin(studyID) 'VsSTWk.png'])
     end 
 end
 
