@@ -11,5 +11,5 @@ Note that the index requires at least two levels of difficulty.
 Run AutoIndexMainAnalysis.m
 This file currently contains everything that's shown in the paper, and more.
 
-[!CAUTION]
-The codebase includes more than what's published. An improvement could be made in the future to provide better docs (particularly on what file formatting are needed to recreate the index for other task designs), and separate exploratory analysis from the primary analysis included in the article. 
+> [!NOTE]
+>Minor improvements on docs and organization is incoming. The codebase includes everything that's needed to reproduce the published results, and a lot more. Improvements could be made in the future to provide better docs (particularly on what file formatting are needed to recreate the index for other task designs), and separate exploratory analysis from the primary analysis included in the article. 
