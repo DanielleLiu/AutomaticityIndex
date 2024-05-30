@@ -1,4 +1,4 @@
-# AutomaticityIndex
+# Attentional Gait Index
 
 The code used to generate the attentional gait index and reproduce results shown in Liu, S., Rosso, A. L., Baillargeon, E. M., Weinstein, A. M., Rosano, C., & Torres-Oviedo, G. (2024). Novel attentional gait index reveals a cognitive ability-related decline in gait automaticity during dual-task walking. Frontiers in aging neuroscience, 15, 1283376.https://www.frontiersin.org/articles/10.3389/fnagi.2023.1283376/full
 
